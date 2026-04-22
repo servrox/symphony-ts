@@ -219,7 +219,11 @@ describe("CodexAppServerClient", () => {
   it("fails the turn when an MCP elicitation requires real operator input", async () => {
     const workspace = await createWorkspace();
     const events: CodexClientEvent[] = [];
-    const client = createClient("mcp-elicitation-user-input", workspace, events);
+    const client = createClient(
+      "mcp-elicitation-user-input",
+      workspace,
+      events,
+    );
 
     await expect(
       client.startSession({

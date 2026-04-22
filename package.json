@@ -22,12 +22,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OasAIStudio/symphony-ts.git"
+    "url": "git+https://github.com/servrox/symphony-ts.git"
   },
   "bugs": {
-    "url": "https://github.com/OasAIStudio/symphony-ts/issues"
+    "url": "https://github.com/servrox/symphony-ts/issues"
   },
-  "homepage": "https://github.com/OasAIStudio/symphony-ts#readme",
+  "homepage": "https://github.com/servrox/symphony-ts#readme",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"

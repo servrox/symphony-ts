@@ -57,6 +57,13 @@ jobs:
       - name: Pack
         run: npm pack
 
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: symphony-ts-package
+          path: symphony-ts-*.tgz
+          if-no-files-found: error
+
       - name: Publish to npm
         if: startsWith(github.ref, 'refs/tags/v')
         run: npm publish --access public

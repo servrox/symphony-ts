@@ -32,6 +32,12 @@ boundary, and gives operators a clean surface for runtime visibility, retries, a
 npm install -g git+https://github.com/servrox/symphony-ts.git#main
 ```
 
+For a versioned install path, use the packaged `.tgz` artifact attached to tagged GitHub Releases in this fork:
+
+```bash
+npm install -g ./symphony-ts-<version>.tgz
+```
+
 Verify the CLI is available:
 
 ```bash
