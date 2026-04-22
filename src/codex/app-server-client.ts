@@ -481,6 +481,69 @@ export class CodexAppServerClient {
       }
     }
 
+    if (isMcpElicitationRequest(parsed, method)) {
+      const approvalKind = extractNestedString(parsed, [
+        "params",
+        "_meta",
+        "codex_approval_kind",
+      ]);
+      const requestId = "id" in parsed ? parsed.id : null;
+
+      // Symphony runs unattended during an active turn. Newer Codex app-server
+      // builds can surface MCP tool-call approvals through elicitation requests
+      // instead of approval/request. Auto-accept tool-call elicitation so
+      // Linear and other MCP-backed flows do not stall waiting for operator
+      // input that Symphony cannot provide mid-turn.
+      if (
+        requestId !== null &&
+        (approvalKind === "mcp_tool_call" ||
+          containsStringValue(parsed, "mcp_tool_call"))
+      ) {
+        this.send({
+          id: requestId,
+          result: {
+            action: "accept",
+            content: {},
+          },
+        });
+        this.emit({
+          event: "approval_auto_approved",
+          sessionId: this.currentTurn?.sessionId ?? null,
+          threadId: this.currentTurn?.threadId ?? this.threadId,
+          turnId: this.currentTurn?.turnId ?? null,
+          raw: parsed,
+          ...optionalTelemetry(this.lastUsage, this.lastRateLimits),
+        });
+        return;
+      }
+
+      if (responseId !== null) {
+        this.send({
+          id: parsed.id,
+          result: {
+            action: "cancel",
+          },
+        });
+      }
+
+      const error = new CodexAppServerClientError(
+        "Codex requested MCP elicitation input during a turn.",
+        ERROR_CODES.codexUserInputRequired,
+      );
+      this.emit({
+        event: "turn_input_required",
+        sessionId: this.currentTurn?.sessionId ?? null,
+        threadId: this.currentTurn?.threadId ?? this.threadId,
+        turnId: this.currentTurn?.turnId ?? null,
+        errorCode: error.code,
+        message: error.message,
+        raw: parsed,
+        ...optionalTelemetry(this.lastUsage, this.lastRateLimits),
+      });
+      this.finishTurnWithError(error, "turn_ended_with_error");
+      return;
+    }
+
     if (isApprovalRequest(parsed, method)) {
       if (responseId !== null) {
         this.send({
@@ -887,6 +950,26 @@ function isApprovalRequest(
   }
 
   return containsStringValue(message, "approval");
+}
+
+function isMcpElicitationRequest(
+  message: JsonObject,
+  method: string | null,
+): boolean {
+  if (method !== null) {
+    const normalized = method.toLowerCase();
+    if (
+      normalized === "mcpserver/elicitation/request" ||
+      normalized.includes("elicitation/request")
+    ) {
+      return true;
+    }
+  }
+
+  return (
+    extractNestedString(message, ["params", "_meta", "codex_approval_kind"]) !==
+    null
+  );
 }
 
 function isToolCallRequest(

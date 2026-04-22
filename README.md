@@ -1,5 +1,11 @@
 # Symphony-ts
 
+> [!IMPORTANT]
+> This fork exists because unattended Symphony runs hit a Codex app-server compatibility gap:
+> MCP tool-call approvals can arrive as `mcpServer/elicitation/request`, and the runtime must
+> auto-accept those requests so Linear and other MCP-backed workflows do not stall waiting for
+> operator input that Symphony cannot provide mid-turn.
+
 **This project is an unofficial TypeScript implementation of [OpenAI Symphony](https://github.com/openai/symphony).**
 
 Symphony-ts turns project work into isolated, autonomous implementation runs: it reads work from
@@ -23,7 +29,7 @@ boundary, and gives operators a clean surface for runtime visibility, retries, a
 ### Install
 
 ```bash
-npm install -g symphony-ts
+npm install -g git+https://github.com/servrox/symphony-ts.git#main
 ```
 
 Verify the CLI is available:
@@ -51,11 +57,7 @@ If you do not pass a path, Symphony defaults to `./WORKFLOW.md`:
 symphony --acknowledge-high-trust-preview --port 4321
 ```
 
-You can also run without global install:
-
-```bash
-npx symphony-ts ./WORKFLOW.md --acknowledge-high-trust-preview --port 4321
-```
+This fork is intended to be installed explicitly from GitHub so the runtime patch is preserved.
 
 Symphony does not generate `WORKFLOW.md` for you. It expects a repository-owned workflow file and,
 by default, reads `./WORKFLOW.md` from the current working directory.
@@ -69,7 +71,7 @@ Set up and start Symphony in this repository.
 Requirements:
 - create or update WORKFLOW.md for Linear
 - use LINEAR_API_KEY from the environment or tell me exactly which variable is missing
-- install symphony-ts and start Symphony with the required --acknowledge-high-trust-preview flag
+- install the Servrox symphony-ts fork and start Symphony with the required --acknowledge-high-trust-preview flag
 - if startup fails, stop and report the exact failing step and command
 ```
 

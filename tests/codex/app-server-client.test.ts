@@ -195,6 +195,53 @@ describe("CodexAppServerClient", () => {
     await client.close();
   });
 
+  it("auto-accepts MCP tool-call elicitation requests", async () => {
+    const workspace = await createWorkspace();
+    const events: CodexClientEvent[] = [];
+    const client = createClient("mcp-elicitation-tool-call", workspace, events);
+
+    const result = await client.startSession({
+      prompt: "Handle MCP elicitation",
+      title: "ABC-123: Example",
+    });
+
+    expect(result).toMatchObject({
+      status: "completed",
+      message: "Elicitation-approved turn finished",
+    });
+    expect(events.map((event) => event.event)).toContain(
+      "approval_auto_approved",
+    );
+
+    await client.close();
+  });
+
+  it("fails the turn when an MCP elicitation requires real operator input", async () => {
+    const workspace = await createWorkspace();
+    const events: CodexClientEvent[] = [];
+    const client = createClient("mcp-elicitation-user-input", workspace, events);
+
+    await expect(
+      client.startSession({
+        prompt: "Need operator input?",
+        title: "ABC-123: Example",
+      }),
+    ).rejects.toMatchObject({
+      name: "CodexAppServerClientError",
+      code: ERROR_CODES.codexUserInputRequired,
+    } satisfies Partial<CodexAppServerClientError>);
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: "turn_input_required",
+        errorCode: ERROR_CODES.codexUserInputRequired,
+        message: "Codex requested MCP elicitation input during a turn.",
+      }),
+    );
+
+    await client.close();
+  });
+
   it("sends the required initialize, thread/start, and turn/start policy payloads", async () => {
     const workspace = await createWorkspace();
     const client = createClient("handshake", workspace, []);

@@ -161,6 +161,36 @@ async function handleMessage(message) {
       return;
     }
 
+    if (scenario === "mcp-elicitation-tool-call") {
+      setTimeout(() => {
+        writeJson({
+          id: "elicitation-1",
+          method: "mcpServer/elicitation/request",
+          params: {
+            _meta: {
+              codex_approval_kind: "mcp_tool_call",
+            },
+          },
+        });
+      }, 10);
+      return;
+    }
+
+    if (scenario === "mcp-elicitation-user-input") {
+      setTimeout(() => {
+        writeJson({
+          id: "elicitation-2",
+          method: "mcpServer/elicitation/request",
+          params: {
+            _meta: {
+              codex_approval_kind: "operator_input",
+            },
+          },
+        });
+      }, 10);
+      return;
+    }
+
     if (turnCount === 1) {
       setTimeout(() => {
         process.stderr.write("diagnostic from stderr\n");
@@ -259,6 +289,42 @@ async function handleMessage(message) {
         },
       });
     }, 10);
+    return;
+  }
+
+  if (message.id === "elicitation-1") {
+    assertEqual(
+      message.result?.action,
+      "accept",
+      "mcp tool-call elicitation must be auto-accepted",
+    );
+
+    setTimeout(() => {
+      writeJson({
+        method: "turn/completed",
+        params: {
+          message: "Elicitation-approved turn finished",
+          usage: {
+            inputTokens: 5,
+            outputTokens: 4,
+            totalTokens: 9,
+          },
+          rateLimits: {
+            requestsRemaining: 10,
+            tokensRemaining: 1000,
+          },
+        },
+      });
+    }, 10);
+    return;
+  }
+
+  if (message.id === "elicitation-2") {
+    assertEqual(
+      message.result?.action,
+      "cancel",
+      "non-tool-call elicitation must be cancelled",
+    );
     return;
   }
 
